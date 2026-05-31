@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "trade-reorder",
+  "version": "${version}",
+  "name": "Trade Reorder",
+  "description": "Adds a toggle in the villager trading screen that lets you drag trades to reorder them. The order is saved per-merchant on the client.",
+  "authors": [ "You" ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.example.tradereorder.TradeReorderClient"
+    ]
+  },
+  "mixins": [
+    "trade-reorder.client.mixins.json"
+  ],
+  "classTweaker": "trade-reorder.classtweaker",
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "minecraft": "~26.1.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

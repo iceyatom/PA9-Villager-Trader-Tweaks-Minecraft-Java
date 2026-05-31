@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# One-shot build helper for Trade Reorder (Minecraft 26.1.2 / Fabric).
+# Requires: JDK 25 on PATH, and a system Gradle >= 9.4 the FIRST time only
+# (to generate the wrapper). After that, ./gradlew is self-contained.
+set -e
+
+if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+  echo ">> Generating Gradle wrapper (needs system 'gradle' once)..."
+  gradle wrapper --gradle-version 9.4.0
+fi
+
+echo ">> Building..."
+./gradlew build
+
+echo
+echo ">> JAR(s) produced in build/libs/:"
+ls -1 build/libs/*.jar
+echo ">> Copy the NON -sources jar into your .minecraft/mods folder."

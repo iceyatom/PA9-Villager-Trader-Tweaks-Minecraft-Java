@@ -1,0 +1,7 @@
+classTweaker	v1	official
+# Make the inner trade-button class accessible so the mixin can reference its
+# type and read the (public) tradeOfferButtons array for click hit-testing.
+# NOTE: we deliberately do NOT make TradeOfferButton.index mutable/accessible —
+# writing that final field caused an IllegalAccessError at runtime. The mod
+# reorders the MerchantOffers list instead, so the field is never touched.
+accessible	class	net/minecraft/client/gui/screens/inventory/MerchantScreen$TradeOfferButton

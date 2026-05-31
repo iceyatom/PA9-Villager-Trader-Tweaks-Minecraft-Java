@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.example.tradereorder.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "MerchantScreenMixin",
+    "MerchantMenuAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,75 @@
+plugins {
+    // 26.1 uses the new non-remapping plugin. Minecraft is no longer obfuscated,
+    // so there is no Yarn remap step. Loom 1.15 is required.
+    id 'net.fabricmc.fabric-loom' version '1.15-SNAPSHOT'
+    id 'java'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+// Minecraft 26.1 requires Java 25 for the Gradle JVM / toolchain.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    withSourcesJar()
+}
+
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+// This project is client-only: it adds a client UI feature.
+loom {
+    splitEnvironmentSourceSets()
+
+    // Class tweaker (formerly access widener). The Loom property kept its old
+    // name for backwards compatibility but accepts the .classtweaker file.
+    accessWidenerPath = file("src/client/resources/trade-reorder.classtweaker")
+
+    mods {
+        "trade-reorder" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+dependencies {
+    // With the unobfuscated Loom plugin, Minecraft is NOT remapped.
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+    // 26.1 is unobfuscated — NO mappings dependency is declared at all.
+    // Loom 1.15 handles this automatically; adding one causes a build error.
+
+    // The non-remapping fabric-loom plugin does NOT provide 'modImplementation'.
+    // Per the 26.1 migration, use the standard 'implementation' configuration.
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Same here: plain 'implementation', not 'modImplementation'.
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+}
+
+// 26.1: 'jar' is the final artifact (no remapJar step anymore).
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.archives_base_name}" }
+    }
+}
