@@ -25,7 +25,6 @@ repositories {
     mavenCentral()
 }
 
-// This project is client-only: it adds a client UI feature.
 loom {
     splitEnvironmentSourceSets()
 
