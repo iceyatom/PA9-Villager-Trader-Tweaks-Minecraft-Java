@@ -3,17 +3,24 @@
   "id": "trade-reorder",
   "version": "${version}",
   "name": "Trade Reorder",
-  "description": "Adds a toggle in the villager trading screen that lets you drag trades to reorder them. The order is saved per-merchant on the client.",
+  "description": "Adds villager trade reordering and a singleplayer view of generated future villager trades.",
   "authors": [ "You" ],
   "license": "MIT",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
+    "main": [
+      "com.example.tradereorder.TradeReorder"
+    ],
     "client": [
       "com.example.tradereorder.TradeReorderClient"
     ]
   },
   "mixins": [
-    "trade-reorder.client.mixins.json"
+    "trade-reorder.mixins.json",
+    {
+      "config": "trade-reorder.client.mixins.json",
+      "environment": "client"
+    }
   ],
   "classTweaker": "trade-reorder.classtweaker",
   "depends": {

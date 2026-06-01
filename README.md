@@ -1,17 +1,26 @@
 # Trade Reorder — Minecraft 26.1.2 (Fabric)
 
-A **client-side** mod for the villager trading screen that lets you reorder
-trades per villager and restore that order on every subsequent visit. Orders
-are saved independently for each villager and scoped to each world/server so
-copies of a world never bleed into each other.
+A mod for the villager trading screen that lets you reorder trades per
+villager, restore that order on every subsequent visit, and view the exact
+future trades generated for a villager in singleplayer. Orders are saved
+independently for each villager and scoped to each world/server so copies of a
+world never bleed into each other.
 
 ---
 
 ## How it works
 
 Villager offer lists are server-authoritative — the server owns the list and
-the client receives a copy. This mod works entirely on that client-side copy
+the client receives a copy. The reorder feature works on that client-side copy
 and never sends anything to the server outside of normal trade packets.
+
+**Future trade view.** In singleplayer, the mod also runs on the integrated
+server. When a villager's trade screen opens, future level-up trades are
+generated immediately using the same vanilla trade-set generation path, saved
+on that villager, and sent to the client for display. When the villager later
+levels up, the saved future trade set is appended instead of allowing vanilla
+to roll a new set, so **View All** shows trades the villager will actually
+offer.
 
 **Display order.** On screen open, the mod captures the server's offer list as
 a sequence of content fingerprints (`costA|costB|result` by item id and count),
@@ -66,8 +75,8 @@ gradlew.bat build        # Windows
 ./gradlew build          # macOS / Linux
 
 # Output:
-#   build/libs/trade-reorder-1.0.0.jar          ← install this
-#   build/libs/trade-reorder-1.0.0-sources.jar  ← ignore
+#   build/libs/trade-reorder-1.1.0.jar          ← install this
+#   build/libs/trade-reorder-1.1.0-sources.jar  ← ignore
 ```
 
 On subsequent rebuilds after source changes, step 3 is not needed — run
@@ -80,7 +89,7 @@ On subsequent rebuilds after source changes, step 3 is not needed — run
 1. Install **Fabric Loader 0.18.4** for Minecraft 26.1.2 via the Fabric
    installer.
 2. Place **Fabric API 0.150.0+26.1.2** in `.minecraft/mods/`.
-3. Place `build/libs/trade-reorder-1.0.0.jar` in `.minecraft/mods/`.
+3. Place `build/libs/trade-reorder-1.1.0.jar` in `.minecraft/mods/`.
 4. Launch the `fabric-loader-26.1.2` profile.
 
 ---
@@ -88,16 +97,24 @@ On subsequent rebuilds after source changes, step 3 is not needed — run
 ## Using it in-game
 
 1. Open a villager or wandering trader's trade screen.
-2. The **Reorder: OFF** toggle sits above the top-left of the trade list.
+2. The **Mode: Trade** toggle sits above the top-left of the trade list.
    A **Reset** button sits immediately to its right.
 
 **To reorder:**
-1. Click **Reorder: OFF** → it becomes **Reorder: ON**.
+1. Click **Mode: Trade** → it becomes **Mode: Reorder**.
 2. Click any trade row to select it — the `#N/total` counter on the left
    updates to show which row is selected.
 3. Click **Up** or **Down** (left side of the screen) to move the selected
    trade. The new order saves to disk immediately.
-4. Click **Reorder: ON** → **OFF** to return to normal trading.
+4. Click the mode button until it returns to **Mode: Trade** to resume normal
+   trading.
+
+**To view all generated trades:**
+- Click the mode button until it shows **Mode: View All**. The trade list shows
+  current offers plus a villager's generated future offers. Future offers are
+  display-only and cannot be selected for trading or reordering. Wandering
+  traders do not have generated future offer tiers, so this mode only shows
+  their current offers.
 
 **To reset:**
 - Click **Reset** at any time to restore the villager's original trade order
@@ -127,9 +144,10 @@ the list is restored to your saved order automatically.
   is not a performance problem, but you can manually delete `orders.json` to
   clear all saved orders, or use the Reset button per villager while it is
   alive.
-- **Source set.** Everything lives in the `client` source set via
-  `splitEnvironmentSourceSets()` — this is a client-only mod with no server
-  entrypoint.
+- **Source sets.** Client UI code lives in the `client` source set. Future
+  trade generation and persistence live in the common source set so the
+  integrated singleplayer server can store generated future offers on villager
+  entities.
 
 ---
 
@@ -149,22 +167,17 @@ autoclicker to server anti-cheat), only enabling the button when the trade has
 uses remaining (checking `MerchantOffer.isOutOfStock()`), and making it visually
 clear which trade is being cycled.
 
-### Viewing locked trades
-
-When a trade runs out of uses (locked / greyed out in vanilla), the offer is
-still present in the list but inaccessible. Add a toggle or separate panel to
-show locked trades with their details still visible — costs, result, and a use
-count or restock timer if that information is available client-side. This is
-purely display: no interaction is needed, just rendering offer data from the
-`MerchantOffers` list entries that are currently `isOutOfStock()`.
-
-This pairs naturally with the reorder feature — you may want to keep a locked
-trade visible in its saved position so you know to come back to it, rather than
-having it silently grey out mid-list.
-
 ---
 
 ## Version history
+
+### 1.1.0 — 2026-06-01
+
+- Added **Mode: View All** to display current offers plus generated future
+  villager trades in singleplayer.
+- Future trades are generated server-side, saved on the villager, sent to the
+  client for display, and consumed when the villager levels up.
+- Reorder mode continues to operate only on real/current offers.
 
 ### 1.0.0 — 2026-05-31
 

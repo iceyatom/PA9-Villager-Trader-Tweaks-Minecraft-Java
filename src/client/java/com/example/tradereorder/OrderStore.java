@@ -71,7 +71,7 @@ public final class OrderStore {
                 orders.putAll(loaded);
             }
         } catch (Exception e) {
-            TradeReorderClient.LOGGER.warn("[Trade Reorder] failed to load orders", e);
+            TradeReorder.LOGGER.warn("[Trade Reorder] failed to load orders", e);
         }
     }
 
@@ -80,7 +80,7 @@ public final class OrderStore {
         try (Writer w = Files.newBufferedWriter(f)) {
             GSON.toJson(orders, TYPE, w);
         } catch (Exception e) {
-            TradeReorderClient.LOGGER.warn("[Trade Reorder] failed to save orders", e);
+            TradeReorder.LOGGER.warn("[Trade Reorder] failed to save orders", e);
         }
     }
 

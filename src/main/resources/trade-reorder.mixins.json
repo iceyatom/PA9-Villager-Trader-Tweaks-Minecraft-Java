@@ -3,10 +3,9 @@
   "minVersion": "0.8",
   "package": "com.example.tradereorder.mixin",
   "compatibilityLevel": "JAVA_25",
-  "client": [
-    "MerchantScreenMixin",
-    "MerchantMenuMixin",
-    "MerchantMenuAccessor"
+  "mixins": [
+    "MerchantMixin",
+    "VillagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
