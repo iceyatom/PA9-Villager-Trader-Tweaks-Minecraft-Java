@@ -75,8 +75,8 @@ gradlew.bat build        # Windows
 ./gradlew build          # macOS / Linux
 
 # Output:
-#   build/libs/trade-reorder-1.1.0.jar          ← install this
-#   build/libs/trade-reorder-1.1.0-sources.jar  ← ignore
+#   build/libs/trade-reorder-1.2.0.jar          ← install this
+#   build/libs/trade-reorder-1.2.0-sources.jar  ← ignore
 ```
 
 On subsequent rebuilds after source changes, step 3 is not needed — run
@@ -89,7 +89,7 @@ On subsequent rebuilds after source changes, step 3 is not needed — run
 1. Install **Fabric Loader 0.18.4** for Minecraft 26.1.2 via the Fabric
    installer.
 2. Place **Fabric API 0.150.0+26.1.2** in `.minecraft/mods/`.
-3. Place `build/libs/trade-reorder-1.1.0.jar` in `.minecraft/mods/`.
+3. Place `build/libs/trade-reorder-1.2.0.jar` in `.minecraft/mods/`.
 4. Launch the `fabric-loader-26.1.2` profile.
 
 ---
@@ -116,6 +116,18 @@ On subsequent rebuilds after source changes, step 3 is not needed — run
   traders do not have generated future offer tiers, so this mode only shows
   their current offers.
 
+**To refresh (cycle) a fresh villager's trades:**
+- In **Mode: View All** a **Cycle** button appears on the left (in the slot the
+  Up/Down buttons use in reorder mode). It re-rolls the villager's trades — both
+  the current offer set and all generated future tiers.
+- It is **only enabled for a villager that has never been traded with**: its XP
+  must be zero and it must still be at the lowest level. Trading with a villager
+  even once raises its XP and permanently disables the button for that villager.
+  When the villager isn't eligible the button is shown greyed-out. Wandering
+  traders are never eligible.
+- Each click generates a brand-new random set, so you can keep cycling until you
+  get trades you like, then start trading.
+
 **To reset:**
 - Click **Reset** at any time to restore the villager's original trade order
   and delete the saved ordering for that villager. Works whether reorder mode
@@ -134,11 +146,26 @@ the list is restored to your saved order automatically.
   `MerchantOffers` list instead of rewriting the buttons' `final index` field,
   which would cause an `IllegalAccessError` at runtime on Loader 0.18.
 - **Mixin targets.** The mod injects into `MerchantScreen.init` (adds buttons),
-  `MerchantScreen.extractContents` (calls `tryInit` on first render),
+  `MerchantScreen.extractContents` (calls `tryInit` on render),
   `MerchantScreen.mouseClicked` (click-to-select in reorder mode), and
   `MerchantScreen.postButtonClick` (index translation). All targets are methods
   declared on `MerchantScreen` itself; the mod does not target inherited methods
   from `AbstractContainerScreen`.
+- **Trade refresh (Cycle).** The client sends an empty `cycle_trades` payload;
+  the server resolves the villager from the requesting player's open
+  `MerchantMenu` (via a `trader`-field accessor), and — only if the villager is
+  still fresh (`getVillagerXp() == 0`, lowest level) — clears its offers, drops
+  the cached future tiers, and re-runs the vanilla `updateTrades` generation
+  path to roll a new set. The refreshed current offers and regenerated future
+  tiers are then pushed back to the client. The button's eligibility is gated
+  client-side using the XP/level the merchant offers packet already syncs
+  (`MerchantMenu.getTraderXp()` / `getTraderLevel()`), and the server re-checks
+  before acting, so a tampered client can't refresh a villager that has traded.
+- **Re-init on content change.** When the screen receives a refreshed offer set
+  it must recapture the server's original order (used for index translation).
+  `tryInit` keys off an order-independent fingerprint signature of the offers, so
+  reordering, reset and restock (which only permute or reset uses) don't trigger
+  a recapture, but a genuine re-roll does.
 - **Orphaned data.** If a villager dies its `orders.json` entry is never
   automatically removed. Entries are small (a handful of strings each) so this
   is not a performance problem, but you can manually delete `orders.json` to
@@ -155,6 +182,10 @@ the list is restored to your saved order automatically.
 
 ### Trade cycling (unlocked trades)
 
+> Distinct from the **Cycle** button shipped in 1.2.0, which re-rolls *all* of a
+> never-traded villager's trades at once. The idea below is a finer-grained,
+> per-offer variant cycler for villagers you have already traded with.
+
 When a villager still has uses remaining on a trade, add a button to cycle
 through and force-refresh that offer's presented variant — useful for trades
 with RNG outcomes (enchanted books, maps) where you want a specific result
@@ -170,6 +201,16 @@ clear which trade is being cycled.
 ---
 
 ## Version history
+
+### 1.2.0 — 2026-06-01
+
+- Added a **Cycle** button in **Mode: View All** that re-rolls a villager's
+  trades (current set + all generated future tiers).
+- Only enabled for villagers that have never been traded with (zero XP, lowest
+  level); the server re-validates before re-rolling, so the gate can't be
+  bypassed by the client.
+- The trade screen recaptures the server's original order after a refresh, so
+  reordering and index translation keep working on the new trades.
 
 ### 1.1.0 — 2026-06-01
 

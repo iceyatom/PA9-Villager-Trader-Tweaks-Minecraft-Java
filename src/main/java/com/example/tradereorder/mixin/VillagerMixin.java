@@ -34,6 +34,12 @@ public abstract class VillagerMixin extends AbstractVillager
 
     @Shadow public abstract VillagerData getVillagerData();
 
+    @Shadow public abstract int getVillagerXp();
+
+    @Shadow private void resendOffersToTradingPlayer() {
+        throw new AssertionError("shadow");
+    }
+
     @Unique private static final String TRADE_REORDER_FUTURE_OFFERS = "TradeReorderFutureOffers";
 
     @Unique private List<MerchantOffers> tradeReorder$futureOffers;
@@ -101,6 +107,36 @@ public abstract class VillagerMixin extends AbstractVillager
     public void tradeReorder$sendFutureOffers(ServerPlayer player) {
         Optional<MerchantOffers> offers = tradeReorder$getFutureOffers();
         ServerPlayNetworking.send(player, new ClientboundFutureTradesPayload(offers));
+    }
+
+    @Override
+    public boolean tradeReorder$canCycleTrades() {
+        return getVillagerXp() == 0
+                && getVillagerData().level() == VillagerData.MIN_VILLAGER_LEVEL
+                && this.offers != null
+                && !this.offers.isEmpty();
+    }
+
+    @Override
+    public void tradeReorder$cycleTrades(ServerPlayer player) {
+        if (!(this.level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        if (!tradeReorder$canCycleTrades()) {
+            return;
+        }
+
+        // Wipe the current offers and drop the cached future tiers, then let the
+        // vanilla generation path roll a fresh set for the current (lowest) level.
+        // Clearing first makes tradeReorder$useStoredFutureTradeSet fall through to
+        // vanilla instead of replaying a stored set, so the trades are genuinely re-rolled.
+        this.offers = new MerchantOffers();
+        tradeReorder$futureOffers = null;
+        this.updateTrades(serverLevel);
+
+        // Push the refreshed current offers and regenerated future tiers to the client.
+        resendOffersToTradingPlayer();
+        tradeReorder$sendFutureOffers(player);
     }
 
     @Unique

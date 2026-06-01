@@ -4,6 +4,7 @@
   "package": "com.example.tradereorder.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "MerchantMenuTraderAccessor",
     "MerchantMixin",
     "VillagerMixin"
   ],

@@ -3,12 +3,15 @@ package com.example.tradereorder.mixin;
 import com.example.tradereorder.OrderStore;
 import com.example.tradereorder.ClientMerchantMenuDuck;
 import com.example.tradereorder.TradeKeys;
+import com.example.tradereorder.network.ServerboundCycleTradesPayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.npc.villager.VillagerData;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.trading.MerchantOffer;
@@ -22,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -59,6 +63,11 @@ public abstract class MerchantScreenMixin
     @Unique private final List<String> tradeReorder$original = new ArrayList<>();
     @Unique private Button tradeReorder$upButton;
     @Unique private Button tradeReorder$downButton;
+    @Unique private Button tradeReorder$cycleButton;
+    // Order-independent fingerprint signature of the offers captured at init.
+    // When the server re-rolls a villager's trades (Cycle), the offer content
+    // changes and this no longer matches, so we recapture the original order.
+    @Unique private String tradeReorder$initSignature = null;
 
     @Unique
     private enum Mode {
@@ -83,6 +92,7 @@ public abstract class MerchantScreenMixin
         tradeReorder$mode = Mode.TRADE;
         tradeReorder$selectedRow = -1;
         tradeReorder$inited = false;
+        tradeReorder$initSignature = null;
         tradeReorder$original.clear();
 
         Button toggle = Button.builder(tradeReorder$label(), b -> {
@@ -108,6 +118,12 @@ public abstract class MerchantScreenMixin
                 .bounds(bx, by + 22, 42, 20).build();
         this.addRenderableWidget(tradeReorder$upButton);
         this.addRenderableWidget(tradeReorder$downButton);
+
+        // Shares the left-side slot with Up/Down: only shown in View All, while
+        // Up/Down are only shown in Reorder, so the two never overlap.
+        tradeReorder$cycleButton = Button.builder(Component.literal("Cycle"), b -> tradeReorder$cycle())
+                .bounds(bx, by, 42, 20).build();
+        this.addRenderableWidget(tradeReorder$cycleButton);
         tradeReorder$refresh();
     }
 
@@ -144,16 +160,26 @@ public abstract class MerchantScreenMixin
     /** Capture original order and apply any saved display order once offers exist. */
     @Unique
     private void tradeReorder$tryInit() {
-        if (tradeReorder$inited) {
-            return;
-        }
         MerchantOffers offers = tradeReorder$offers();
         if (offers == null || offers.isEmpty()) {
             return;
         }
+        // Re-run init whenever the offer content changes (e.g. the server re-rolled
+        // the trades via Cycle). Reordering only permutes the list, so the
+        // order-independent signature is stable across moves/reset/restock and
+        // we don't needlessly recapture during normal use.
+        String signature = tradeReorder$contentSignature(offers);
+        if (tradeReorder$inited && signature.equals(tradeReorder$initSignature)) {
+            return;
+        }
         tradeReorder$inited = true;
+        tradeReorder$initSignature = signature;
+        if (tradeReorder$selectedRow >= offers.size()) {
+            tradeReorder$selectedRow = offers.isEmpty() ? -1 : 0;
+        }
 
         // Record the server's order first; this is what packet indices refer to.
+        // Freshly-arrived offers are in server order, so capturing now is correct.
         tradeReorder$original.clear();
         for (MerchantOffer o : offers) {
             tradeReorder$original.add(TradeKeys.fingerprint(o));
@@ -178,6 +204,21 @@ public abstract class MerchantScreenMixin
         offers.addAll(ordered);
     }
 
+    /**
+     * Order-independent signature of an offer list's contents: the sorted set of
+     * fingerprints. Unchanged by reordering (which only permutes the list), but
+     * differs when the underlying trades themselves change (a Cycle re-roll).
+     */
+    @Unique
+    private String tradeReorder$contentSignature(MerchantOffers offers) {
+        List<String> fingerprints = new ArrayList<>(offers.size());
+        for (MerchantOffer o : offers) {
+            fingerprints.add(TradeKeys.fingerprint(o));
+        }
+        Collections.sort(fingerprints);
+        return String.join("\n", fingerprints);
+    }
+
     @Unique
     private void tradeReorder$refresh() {
         boolean on = tradeReorder$mode == Mode.REORDER;
@@ -196,6 +237,34 @@ public abstract class MerchantScreenMixin
             tradeReorder$downButton.active =
                     on && tradeReorder$selectedRow >= 0 && tradeReorder$selectedRow < size - 1;
         }
+        if (tradeReorder$cycleButton != null) {
+            boolean viewAll = tradeReorder$mode == Mode.VIEW_ALL;
+            tradeReorder$cycleButton.visible = viewAll;
+            tradeReorder$cycleButton.active = viewAll && tradeReorder$canCycle();
+        }
+    }
+
+    /**
+     * A villager may have its trades refreshed only if it has never been traded
+     * with — zero XP — and is still at the lowest level. Both values are synced
+     * to the client by the merchant offers packet. Wandering traders never pass
+     * the server-side villager check, so a click on them is simply a no-op.
+     */
+    @Unique
+    private boolean tradeReorder$canCycle() {
+        // showProgressBar() is true for villagers and false for wandering traders,
+        // so this also keeps the button disabled for traders the server would reject.
+        return this.menu.showProgressBar()
+                && this.menu.getTraderXp() == 0
+                && this.menu.getTraderLevel() <= VillagerData.MIN_VILLAGER_LEVEL;
+    }
+
+    @Unique
+    private void tradeReorder$cycle() {
+        if (tradeReorder$mode != Mode.VIEW_ALL || !tradeReorder$canCycle()) {
+            return;
+        }
+        ClientPlayNetworking.send(new ServerboundCycleTradesPayload());
     }
 
     @Unique
