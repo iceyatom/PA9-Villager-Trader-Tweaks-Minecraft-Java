@@ -2,10 +2,14 @@
   "schemaVersion": 1,
   "id": "trade-reorder",
   "version": "${version}",
-  "name": "Trade Reorder",
-  "description": "Adds villager trade reordering and a singleplayer view of generated future villager trades.",
-  "authors": [ "You" ],
+  "name": "PA9 Villager Trade Tweaks",
+  "description": "Reorder villager trades and have your custom order restored on every visit, view a villager's generated future trades in singleplayer, and re-roll a never-traded villager's trades until you get a set you like.",
+  "authors": [ "PersonalAtom9" ],
+  "contact": {
+    "homepage": "https://www.youtube.com/@PersonalAtom9"
+  },
   "license": "MIT",
+  "icon": "assets/trade-reorder/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
