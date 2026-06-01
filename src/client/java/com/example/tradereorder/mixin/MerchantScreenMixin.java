@@ -348,9 +348,7 @@ public abstract class MerchantScreenMixin
         // and required a fragile 'mutable' class-tweak that fails at runtime
         // with IllegalAccessError on Loader 0.18.
 
-        if (tradeReorder$mode == Mode.VIEW_ALL) {
-            tradeReorder$disableFutureTradeRows();
-        }
+        tradeReorder$syncTradeRowActivity();
 
         if (tradeReorder$mode == Mode.REORDER) {
             tradeReorder$refresh();
@@ -364,7 +362,7 @@ public abstract class MerchantScreenMixin
     }
 
     @Unique
-    private void tradeReorder$disableFutureTradeRows() {
+    private void tradeReorder$syncTradeRowActivity() {
         if (this.tradeOfferButtons == null) {
             return;
         }
@@ -376,9 +374,10 @@ public abstract class MerchantScreenMixin
                 continue;
             }
             int row = this.scrollOff + i;
-            if (row >= currentSize && row < displaySize) {
-                btn.active = false;
-            }
+            boolean currentOffer = row >= 0 && row < currentSize;
+            boolean futureOffer = tradeReorder$mode == Mode.VIEW_ALL
+                    && row >= currentSize && row < displaySize;
+            btn.active = currentOffer && !futureOffer;
         }
     }
 }
