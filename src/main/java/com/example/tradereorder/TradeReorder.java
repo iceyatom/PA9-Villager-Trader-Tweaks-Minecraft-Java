@@ -1,9 +1,16 @@
 package com.example.tradereorder;
 
+import com.example.tradereorder.ducks.VillagerFutureTradesDuck;
+import com.example.tradereorder.mixin.MerchantMenuTraderAccessor;
 import com.example.tradereorder.network.ClientboundFutureTradesPayload;
+import com.example.tradereorder.network.ServerboundCycleTradesPayload;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.inventory.MerchantMenu;
+import net.minecraft.world.item.trading.Merchant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +23,21 @@ public class TradeReorder implements ModInitializer {
         PayloadTypeRegistry.clientboundPlay().register(
                 ClientboundFutureTradesPayload.PACKET_ID,
                 ClientboundFutureTradesPayload.PACKET_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(
+                ServerboundCycleTradesPayload.PACKET_ID,
+                ServerboundCycleTradesPayload.PACKET_CODEC);
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                ServerboundCycleTradesPayload.PACKET_ID,
+                (payload, context) -> {
+                    if (!(context.player().containerMenu instanceof MerchantMenu menu)) {
+                        return;
+                    }
+                    Merchant trader = ((MerchantMenuTraderAccessor) menu).tradeReorder$getTrader();
+                    if (trader instanceof Villager villager) {
+                        VillagerFutureTradesDuck.of(villager).tradeReorder$cycleTrades(context.player());
+                    }
+                });
         LOGGER.info("[Trade Reorder] initialized");
     }
 
