@@ -75,8 +75,8 @@ gradlew.bat build        # Windows
 ./gradlew build          # macOS / Linux
 
 # Output:
-#   build/libs/trade-reorder-1.2.0.jar          ← install this
-#   build/libs/trade-reorder-1.2.0-sources.jar  ← ignore
+#   build/libs/trade-reorder-1.2.1.jar          ← install this
+#   build/libs/trade-reorder-1.2.1-sources.jar  ← ignore
 ```
 
 On subsequent rebuilds after source changes, step 3 is not needed — run
@@ -89,7 +89,7 @@ On subsequent rebuilds after source changes, step 3 is not needed — run
 1. Install **Fabric Loader 0.18.4** for Minecraft 26.1.2 via the Fabric
    installer.
 2. Place **Fabric API 0.150.0+26.1.2** in `.minecraft/mods/`.
-3. Place `build/libs/trade-reorder-1.2.0.jar` in `.minecraft/mods/`.
+3. Place `build/libs/trade-reorder-1.2.1.jar` in `.minecraft/mods/`.
 4. Launch the `fabric-loader-26.1.2` profile.
 
 ---
@@ -201,6 +201,17 @@ clear which trade is being cycled.
 ---
 
 ## Version history
+
+### 1.2.1 — 2026-06-01
+
+- Fixed a bug where scrolling down in **Mode: View All** on a fresh (level 0)
+  villager and then switching back to **Trade** or **Reorder** left the
+  villager's currently available trades greyed out / unselectable until the
+  screen was closed and reopened. Leaving View All shrinks the display list back
+  to the current offers, but the leftover scroll offset pushed every visible row
+  past the end of the shorter list, so the real trades were treated as
+  unavailable. The scroll offset is now clamped back into range on every mode
+  switch (mirroring vanilla's own scroll clamp).
 
 ### 1.2.0 — 2026-06-01
 

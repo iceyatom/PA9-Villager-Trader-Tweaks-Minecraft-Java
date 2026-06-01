@@ -224,6 +224,16 @@ public abstract class MerchantScreenMixin
         boolean on = tradeReorder$mode == Mode.REORDER;
         ClientMerchantMenuDuck.of(this.menu).tradeReorder$setShowAllTrades(
                 tradeReorder$mode == Mode.VIEW_ALL);
+        // Leaving View All shrinks the display list from current+future back to
+        // just the current offers. Vanilla only re-clamps scrollOff on scroll, so
+        // a value left over from the longer list would push every visible row past
+        // the end of the (shorter) list; syncTradeRowActivity then treats those
+        // rows as "no current offer" and greys out the real, unlocked trades.
+        // Clamp scrollOff back into range here, mirroring vanilla mouseScrolled.
+        int maxScroll = Math.max(0, tradeReorder$displayCount() - 7);
+        if (this.scrollOff > maxScroll) {
+            this.scrollOff = maxScroll;
+        }
         if (on && tradeReorder$selectedRow < 0 && tradeReorder$count() > 0) {
             tradeReorder$selectedRow = 0;
         }
