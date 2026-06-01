@@ -111,8 +111,10 @@ On subsequent rebuilds after source changes, step 3 is not needed — run
 
 **To view all generated trades:**
 - Click the mode button until it shows **Mode: View All**. The trade list shows
-  current offers plus the villager's generated future offers. Future offers are
-  display-only and cannot be selected for trading or reordering.
+  current offers plus a villager's generated future offers. Future offers are
+  display-only and cannot be selected for trading or reordering. Wandering
+  traders do not have generated future offer tiers, so this mode only shows
+  their current offers.
 
 **To reset:**
 - Click **Reset** at any time to restore the villager's original trade order
