@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -353,19 +354,26 @@ public abstract class MerchantScreenMixin
     }
 
     /**
-     * The vanilla press handler sets {@code shopItem = button.getIndex() + scrollOff}
-     * (a <em>display</em> index into our reordered client list) and then
-     * postButtonClick() uses it for setSelectionHint, tryMoveItems, and the
-     * ServerboundSelectTradePacket. Since the server's list is NOT reordered, we
-     * rewrite shopItem here to the original server index of the displayed offer,
-     * so the trade that executes matches the trade the player clicked.
+     * The vanilla press handler sets {@code shopItem = button.getIndex() + scrollOff},
+     * a <em>display</em> index into our reordered client list, and postButtonClick()
+     * consumes it three ways: {@code setSelectionHint} and {@code tryMoveItems} (which
+     * read the client's reordered offer list to drive the result-slot preview and fill
+     * the payment slots), plus the outgoing {@code ServerboundSelectTradePacket}. The
+     * out-of-stock and progress-bar overlays also key off the {@code shopItem} field.
+     *
+     * <p>Only the packet must carry the <em>server</em> index, because the server's
+     * offer list is never reordered. So we leave {@code shopItem} as the display index
+     * — keeping the local preview, payment-slot fill and overlays aligned with what the
+     * player actually sees — and translate just the packet argument to the clicked
+     * offer's original server index. (Rewriting the field instead, as a HEAD inject
+     * once did, made the result square preview the wrong trade.)</p>
      */
-    @Inject(method = "postButtonClick", at = @At("HEAD"))
-    private void tradeReorder$translateSelection(CallbackInfo ci) {
-        if (tradeReorder$original.isEmpty()) {
-            return;
-        }
-        this.shopItem = tradeReorder$realIndex(this.shopItem);
+    @ModifyArg(
+            method = "postButtonClick",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/network/protocol/game/ServerboundSelectTradePacket;<init>(I)V"))
+    private int tradeReorder$translatePacketIndex(int displayIndex) {
+        return tradeReorder$original.isEmpty() ? displayIndex : tradeReorder$realIndex(displayIndex);
     }
 
     /**

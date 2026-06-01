@@ -75,8 +75,8 @@ gradlew.bat build        # Windows
 ./gradlew build          # macOS / Linux
 
 # Output:
-#   build/libs/trade-reorder-1.2.1.jar          ← install this
-#   build/libs/trade-reorder-1.2.1-sources.jar  ← ignore
+#   build/libs/trade-reorder-1.2.2.jar          ← install this
+#   build/libs/trade-reorder-1.2.2-sources.jar  ← ignore
 ```
 
 On subsequent rebuilds after source changes, step 3 is not needed — run
@@ -89,7 +89,7 @@ On subsequent rebuilds after source changes, step 3 is not needed — run
 1. Install **Fabric Loader 0.18.4** for Minecraft 26.1.2 via the Fabric
    installer.
 2. Place **Fabric API 0.150.0+26.1.2** in `.minecraft/mods/`.
-3. Place `build/libs/trade-reorder-1.2.1.jar` in `.minecraft/mods/`.
+3. Place `build/libs/trade-reorder-1.2.2.jar` in `.minecraft/mods/`.
 4. Launch the `fabric-loader-26.1.2` profile.
 
 ---
@@ -201,6 +201,18 @@ clear which trade is being cycled.
 ---
 
 ## Version history
+
+### 1.2.2 — 2026-06-01
+
+- Fixed reordered trades previewing the wrong items in the trade squares. When a
+  trade had been moved, clicking it executed correctly but the result-slot
+  preview, payment-slot fill, and out-of-stock/progress overlays showed a
+  different trade. The selection translation that maps a clicked display row back
+  to the server's original index was overwriting the screen's `shopItem` field,
+  so every consumer that reads the (reordered) client offer list resolved the
+  wrong offer. Only the outgoing `ServerboundSelectTradePacket` now carries the
+  server index; `shopItem` stays a display index, so the preview matches what was
+  clicked while the executed trade remains correct.
 
 ### 1.2.1 — 2026-06-01
 
