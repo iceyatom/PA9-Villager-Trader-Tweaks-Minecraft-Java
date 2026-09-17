@@ -26,7 +26,7 @@
       "environment": "client"
     }
   ],
-  "classTweaker": "trade-reorder.classtweaker",
+  "accessWidener": "trade-reorder.classtweaker",
   "depends": {
     "fabricloader": ">=0.19.5",
     "minecraft": "~26.3",

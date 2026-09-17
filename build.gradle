@@ -72,3 +72,27 @@ jar {
         rename { "${it}_${project.archives_base_name}" }
     }
 }
+
+// Load the packaged mod through Fabric/Mixin without opening a game window.
+// Compilation alone cannot validate @Shadow and injection targets.
+sourceSets {
+    smokeTest {
+        compileClasspath += sourceSets.client.runtimeClasspath
+        runtimeClasspath += sourceSets.client.runtimeClasspath
+    }
+}
+
+tasks.register('mixinSmokeTest', JavaExec) {
+    dependsOn tasks.jar, tasks.smokeTestClasses
+    classpath = sourceSets.smokeTest.runtimeClasspath - sourceSets.main.output - sourceSets.client.output
+    classpath += files(tasks.jar.archiveFile)
+    mainClass = 'net.fabricmc.loader.impl.launch.knot.KnotClient'
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    systemProperty 'fabric.development', 'true'
+    workingDir = layout.buildDirectory.dir('mixin-smoke-run').get().asFile
+    doFirst { workingDir.mkdirs() }
+}
+
+tasks.check { dependsOn tasks.mixinSmokeTest }

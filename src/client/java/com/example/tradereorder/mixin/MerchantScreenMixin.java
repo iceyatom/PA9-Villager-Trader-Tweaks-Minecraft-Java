@@ -1,5 +1,6 @@
 package com.example.tradereorder.mixin;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.example.tradereorder.OrderStore;
 import com.example.tradereorder.ClientMerchantMenuDuck;
 import com.example.tradereorder.TradeKeys;
@@ -386,7 +387,7 @@ public abstract class MerchantScreenMixin
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void tradeReorder$onClick(MouseButtonEvent event, boolean doubleClick,
                                       CallbackInfoReturnable<Boolean> cir) {
-        if (event.button() != 0 || this.tradeOfferButtons == null
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT || this.tradeOfferButtons == null
                 || tradeReorder$mode == Mode.TRADE) {
             return;
         }

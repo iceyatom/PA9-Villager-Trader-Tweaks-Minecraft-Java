@@ -82,6 +82,11 @@ gradlew.bat build        # Windows
 On subsequent rebuilds after source changes, step 3 is not needed — run
 `gradlew.bat build` directly.
 
+The build also runs `mixinSmokeTest`, which loads the packaged mod through Fabric,
+checks its mixin targets and trade-button access, and runs Minecraft bootstrap
+without opening a game window. This catches runtime compatibility errors that
+Java compilation alone misses. In-game interaction still needs manual testing.
+
 ---
 
 ## Install
