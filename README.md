@@ -1,4 +1,4 @@
-# Trade Reorder — Minecraft 26.1.2 (Fabric)
+# Trade Reorder — Minecraft 26.2 (Fabric)
 
 A mod for the villager trading screen that lets you reorder trades per
 villager, restore that order on every subsequent visit, and view the exact
@@ -47,12 +47,12 @@ or re-leveling trades — unrecognised trades are appended at the end.
 
 ## Requirements to build
 
-- **JDK 25** — Minecraft 26.1 requires Java 25 for both compilation and the
+- **JDK 25** — Minecraft 26.2 requires Java 25 for both compilation and the
   Gradle toolchain.
 - **Gradle 9.4+** on your `PATH` — needed once to generate the wrapper, then
   `gradlew` is self-contained.
 - Internet access to `maven.fabricmc.net` and Mojang's servers on first build
-  (Loom downloads the 26.1.2 client jar).
+  (Loom downloads the 26.2 client jar).
 - IntelliJ IDEA **2025.3+** if developing (earlier versions don't resolve
   mixins correctly for this MC version).
 
@@ -75,8 +75,8 @@ gradlew.bat build        # Windows
 ./gradlew build          # macOS / Linux
 
 # Output:
-#   build/libs/trade-reorder-1.2.2.jar          ← install this
-#   build/libs/trade-reorder-1.2.2-sources.jar  ← ignore
+#   build/libs/villager-trade-tweaks-26.2-1.2.2.jar          ← install this
+#   build/libs/villager-trade-tweaks-26.2-1.2.2-sources.jar  ← ignore
 ```
 
 On subsequent rebuilds after source changes, step 3 is not needed — run
@@ -86,11 +86,11 @@ On subsequent rebuilds after source changes, step 3 is not needed — run
 
 ## Install
 
-1. Install **Fabric Loader 0.18.4** for Minecraft 26.1.2 via the Fabric
+1. Install **Fabric Loader 0.19.3** for Minecraft 26.2 via the Fabric
    installer.
-2. Place **Fabric API 0.150.0+26.1.2** in `.minecraft/mods/`.
-3. Place `build/libs/trade-reorder-1.2.2.jar` in `.minecraft/mods/`.
-4. Launch the `fabric-loader-26.1.2` profile.
+2. Place **Fabric API 0.154.0+26.2** in `.minecraft/mods/`.
+3. Place `build/libs/villager-trade-tweaks-26.2-1.2.2.jar` in `.minecraft/mods/`.
+4. Launch the `fabric-loader-26.2` profile.
 
 ---
 
