@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ReputationEventHandler;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.villager.VillagerData;
@@ -36,7 +37,9 @@ public abstract class VillagerMixin extends AbstractVillager
 
     @Shadow public abstract int getVillagerXp();
 
-    @Shadow private void resendOffersToTradingPlayer() {
+    // In 26.3, updating special prices also refreshes the open merchant menu
+    // and sends its offers to the trading player.
+    @Shadow private void updateSpecialPrices(Player player) {
         throw new AssertionError("shadow");
     }
 
@@ -135,7 +138,7 @@ public abstract class VillagerMixin extends AbstractVillager
         this.updateTrades(serverLevel);
 
         // Push the refreshed current offers and regenerated future tiers to the client.
-        resendOffersToTradingPlayer();
+        updateSpecialPrices(player);
         tradeReorder$sendFutureOffers(player);
     }
 
